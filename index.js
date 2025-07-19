@@ -1,28 +1,24 @@
-const { Telegraf } = require('telegraf');
-const { Configuration, OpenAIApi } = require('openai');
+const { Telegraf } = require("telegraf");
+const { OpenAI } = require("openai");
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
-bot.start((ctx) => ctx.reply('Привет! Я твой персональный GPT-бот.'));
-
-bot.on('text', async (ctx) => {
-  const userMessage = ctx.message.text;
-
+bot.on("text", async (ctx) => {
   try {
-    const response = await openai.createChatCompletion({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: userMessage }],
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: ctx.message.text }],
     });
-    const botReply = response.data.choices[0].message.content;
-    ctx.reply(botReply);
-  } catch (error) {
-    ctx.reply('Ошибка при обращении к OpenAI API.');
+
+    const reply = completion.choices[0].message.content;
+    ctx.reply(reply);
+  } catch (err) {
+    console.error("Ошибка:", err);
+    ctx.reply("Что-то пошло не так…");
   }
 });
 
 bot.launch();
-console.log('Бот запущен');
